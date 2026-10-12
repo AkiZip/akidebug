@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Telemetry Records - Admin</title>
+    <style>
+        body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; color: #333; margin: 24px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; vertical-align: top; }
+        th { background: #f5f5f5; }
+        td pre { margin: 0; white-space: pre-wrap; word-break: break-all; font-size: 13px; }
+        .badge { border-radius: 4px; padding: 1px 8px; font-size: 13px; white-space: nowrap; }
+        .s-pending { background: #ffebee; color: #c62828; }
+        .s-inprogress { background: #fff8e1; color: #f57f17; }
+        .s-resolved { background: #e8f5e9; color: #2e7d32; }
+        a { color: #1976d2; }
+    </style>
+</head>
+<body>
+    <h2>Telemetry Records ({{ rows|length }} total)</h2>
+    <p><a href="{{ url_for('logout') }}">Log out</a></p>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Time</th>
+            <th>Version</th>
+            <th>Error</th>
+            <th>Status</th>
+        </tr>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.created_at }}</td>
+            <td>{{ row.version }}</td>
+            <td><pre>{{ row.error }}</pre></td>
+            <td>
+                {% set cls = 's-pending' if row.status == 'Pending' else ('s-inprogress' if row.status == 'In Progress' else 's-resolved') %}
+                <span class="badge {{ cls }}">{{ row.status }}</span>
+                <form method="post" action="{{ url_for('set_status') }}" style="margin-top: 4px;">
+                    <input type="hidden" name="id" value="{{ row.id }}">
+                    <select name="status">
+                        {% for s in statuses %}
+                        <option value="{{ s }}" {% if row.status == s %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Update</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">No records yet.</td></tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

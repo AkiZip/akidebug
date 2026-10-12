@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Login - Telemetry</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f4f6f8;
+            font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+            color: #333;
+        }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+            padding: 36px 44px;
+            width: 300px;
+        }
+        h2 { margin: 0 0 20px; font-size: 20px; text-align: center; }
+        input[type=password] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        input[type=password]:focus { outline: none; border-color: #1976d2; }
+        button {
+            width: 100%;
+            margin-top: 14px;
+            padding: 9px 0;
+            border: none;
+            border-radius: 5px;
+            background: #1976d2;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        button:hover { background: #1565c0; }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 13px;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Telemetry Admin Login</h2>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="post">
+            <input type="password" name="password" placeholder="Admin password" autofocus>
+            <button type="submit">Log In</button>
+        </form>
+    </div>
+</body>
+</html>
