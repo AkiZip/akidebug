@@ -14,6 +14,20 @@ Edit `config.ini` with your MySQL credentials and admin password (the database a
 python3 app.py
 ```
 
+## Docker
+
+`config.ini` contains secrets and is excluded from the image via `.dockerignore` — mount it at runtime:
+
+```bash
+docker build -t akidebug .
+docker run -d --name akidebug \
+  -p 5000:5000 \
+  -v "$(pwd)/config.ini:/app/config.ini:ro" \
+  akidebug
+```
+
+The container expects MySQL to be reachable at the host/port configured in `config.ini` (e.g. another container on the same Docker network, or the host machine).
+
 ## Configuration (config.ini)
 
 | Section | Keys | Defaults | Description |

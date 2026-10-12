@@ -20,7 +20,7 @@ MYSQL_HOST = config.get("mysql", "host", fallback="127.0.0.1")
 MYSQL_PORT = config.getint("mysql", "port", fallback=3306)
 MYSQL_USER = config.get("mysql", "user", fallback="root")
 MYSQL_PASSWORD = config.get("mysql", "password", fallback="")
-MYSQL_DATABASE = config.get("mysql", "database", fallback="telemetry")
+MYSQL_DATABASE = config.get("mysql", "database", fallback="akidebug")
 
 ADMIN_PASSWORD = config.get("admin", "password", fallback="admin123")
 SECRET_KEY = config.get("flask", "secret_key", fallback=os.urandom(24).hex())
