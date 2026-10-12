@@ -1,6 +1,6 @@
-# Telemetry Collector
+# akidebug
 
-A server-rendered Flask telemetry collection site backed by MySQL, running in production mode (waitress as the WSGI server, debug off). It provides two features: anonymous upload and an admin panel.
+akidebug is a server-rendered Flask telemetry collection site backed by MySQL, running in production mode (waitress as the WSGI server, debug off). It provides two features: anonymous upload and an admin panel.
 
 ## Setup
 
@@ -18,7 +18,7 @@ python3 app.py
 
 | Section | Keys | Defaults | Description |
 |---|---|---|---|
-| `[mysql]` | `host` / `port` / `user` / `password` / `database` | 127.0.0.1 / 3306 / root / empty / telemetry | MySQL connection |
+| `[mysql]` | `host` / `port` / `user` / `password` / `database` | 127.0.0.1 / 3306 / root / empty / akidebug | MySQL connection |
 | `[admin]` | `password` | `admin123` | Admin panel password |
 | `[flask]` | `secret_key` | `change-me-to-a-random-string` | Flask session secret — must be changed in production |
 | `[server]` | `host` / `port` | 0.0.0.0 / 5000 | Listen address |
