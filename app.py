@@ -2,7 +2,12 @@ import base64
 import binascii
 import configparser
 import json
+import logging
 import os
+import ssl
+import threading
+import urllib.parse
+import urllib.request
 from datetime import datetime
 
 import pymysql
@@ -27,6 +32,39 @@ SECRET_KEY = config.get("flask", "secret_key", fallback=os.urandom(24).hex())
 
 SERVER_HOST = config.get("server", "host", fallback="0.0.0.0")
 SERVER_PORT = config.getint("server", "port", fallback=5000)
+
+GOTIFY_URL = config.get("gotify", "url", fallback="")
+GOTIFY_TOKEN = config.get("gotify", "token", fallback="")
+GOTIFY_PRIORITY = config.getint("gotify", "priority", fallback=5)
+GOTIFY_CA_FILE = config.get("gotify", "ca_file", fallback="")
+GOTIFY_TIMEOUT = 5  # seconds
+
+logger = logging.getLogger(__name__)
+
+
+def build_gotify_ssl_context():
+    """Build the SSL context used to verify the push server's certificate.
+
+    Uses the user-provided CA file when configured (self-signed setups),
+    otherwise falls back to the system trust store.
+    """
+    if GOTIFY_CA_FILE:
+        ca_path = GOTIFY_CA_FILE
+        if not os.path.isabs(ca_path):
+            ca_path = os.path.join(BASE_DIR, ca_path)
+        try:
+            return ssl.create_default_context(cafile=ca_path)
+        except (OSError, ssl.SSLError) as exc:
+            logger.warning("Gotify CA file %r is unusable (%s); "
+                           "push notifications are disabled.", ca_path, exc)
+            return None
+    return ssl.create_default_context()
+
+
+GOTIFY_ENABLED = bool(GOTIFY_URL and GOTIFY_TOKEN)
+GOTIFY_SSL_CONTEXT = build_gotify_ssl_context() if GOTIFY_ENABLED else None
+if GOTIFY_ENABLED and GOTIFY_SSL_CONTEXT is None:
+    GOTIFY_ENABLED = False
 
 MAX_DATA_LEN = 64 * 1024  # max length of the base64 parameter
 STATUSES = ["Pending", "In Progress", "Resolved"]
@@ -95,6 +133,45 @@ def admin_required():
     return bool(session.get("admin"))
 
 
+# ---------- Push notification (Gotify) ----------
+
+def send_gotify_notification(record_id, version, error):
+    """Push a notification about a new telemetry record.
+
+    Runs in a background thread; every failure is logged and swallowed so
+    it can never affect the user-facing response.
+    """
+    try:
+        error_summary = error if len(error) <= 500 else error[:500] + "..."
+        body = urllib.parse.urlencode({
+            "title": f"New telemetry #{record_id}",
+            "message": f"version: {version}\n{error_summary}",
+            "priority": str(GOTIFY_PRIORITY),
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            GOTIFY_URL,
+            data=body,
+            headers={
+                "X-Gotify-Key": GOTIFY_TOKEN,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=GOTIFY_TIMEOUT,
+                                    context=GOTIFY_SSL_CONTEXT):
+            pass
+    except Exception as exc:  # noqa: BLE001 - push must never break uploads
+        logger.warning("Gotify push for telemetry #%s failed: %s", record_id, exc)
+
+
+def push_gotify_async(record_id, version, error):
+    if GOTIFY_ENABLED:
+        threading.Thread(
+            target=send_gotify_notification,
+            args=(record_id, version, error),
+            daemon=True,
+        ).start()
+
+
 # ---------- Feature 1: anonymous telemetry upload ----------
 
 def fail(message):
@@ -141,6 +218,7 @@ def upload():
         )
         record_id = cur.lastrowid
     conn.commit()
+    push_gotify_async(record_id, version, error)
     return render_template(
         "upload_result.html", success=True,
         message="Telemetry submitted successfully. Thank you for your feedback!",
