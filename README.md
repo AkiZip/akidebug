@@ -36,6 +36,7 @@ The container expects MySQL to be reachable at the host/port configured in `conf
 | `[admin]` | `password` | `admin123` | Admin panel password |
 | `[flask]` | `secret_key` | `change-me-to-a-random-string` | Flask session secret — must be changed in production |
 | `[server]` | `host` / `port` | 0.0.0.0 / 5000 | Listen address |
+| `[gotify]` | `url` / `token` / `priority` / `ca_file` | empty / empty / 5 / empty | Gotify push notifications — disabled when `url` or `token` is empty |
 
 ## Feature 1: Anonymous Telemetry Upload
 
@@ -52,6 +53,20 @@ Notes:
 - URL-safe base64 (`-` / `_`) is accepted, and missing padding is restored automatically.
 - If there is no `error` field, `message` is used instead; otherwise the whole JSON payload is stored.
 - Payload size is limited to 64KB.
+
+### Push notifications (Gotify)
+
+When `[gotify]` is configured, every successful upload triggers a push notification equivalent to:
+
+```bash
+curl "https://push.example.de/message" -H "X-Gotify-Key: <apptoken>" \
+  -F "title=New telemetry #<id>" -F "message=version: ..." -F "priority=5"
+```
+
+- The push runs in a background thread with a 5s timeout: failures are logged only and never delay or break the upload response.
+- For push servers using a self-signed certificate, put your CA certificate (PEM) next to `app.py` and set `ca_file` (e.g. `gotify-ca.crt`) — the server certificate is verified against it. Leave `ca_file` empty to use the system trust store.
+- If `ca_file` is set but the file is missing or invalid, a warning is logged and push notifications are disabled (the service still starts normally).
+- With Docker, also mount the CA file, e.g. `-v "$(pwd)/gotify-ca.crt:/app/gotify-ca.crt:ro"`.
 
 ## Feature 2: Admin Panel
 
