@@ -53,11 +53,13 @@ def build_gotify_ssl_context():
         if not os.path.isabs(ca_path):
             ca_path = os.path.join(BASE_DIR, ca_path)
         try:
-            return ssl.create_default_context(cafile=ca_path)
+            context = ssl.create_default_context(cafile=ca_path)
         except (OSError, ssl.SSLError) as exc:
             logger.warning("Gotify CA file %r is unusable (%s); "
                            "push notifications are disabled.", ca_path, exc)
             return None
+        context.verify_flags &= ~ssl.VERIFY_X509_STRICT
+        return context
     return ssl.create_default_context()
 
 
