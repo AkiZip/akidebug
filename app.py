@@ -4,6 +4,7 @@ import configparser
 import json
 import logging
 import os
+import re
 import ssl
 import threading
 import urllib.parse
@@ -119,6 +120,7 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS telemetry (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     version VARCHAR(255) NOT NULL,
+                    country VARCHAR(8) NULL,
                     error TEXT,
                     raw TEXT,
                     status VARCHAR(16) NOT NULL DEFAULT 'Pending',
@@ -212,11 +214,17 @@ def upload():
     error = str(error)
     raw = json.dumps(payload, ensure_ascii=False)
 
+    # Country reported by Cloudflare; empty when not behind Cloudflare
+    country = re.sub(r"[^A-Za-z0-9-]", "", request.headers.get("CF-IPCountry", ""))
+    country = country[:8] or None
+
     conn = get_db()
     with conn.cursor() as cur:
         cur.execute(
-            "INSERT INTO telemetry (version, error, raw, created_at) VALUES (%s, %s, %s, %s)",
-            (version, error, raw, datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            "INSERT INTO telemetry (version, country, error, raw, created_at) "
+            "VALUES (%s, %s, %s, %s, %s)",
+            (version, country, error, raw,
+             datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
         )
         record_id = cur.lastrowid
     conn.commit()

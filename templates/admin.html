@@ -25,6 +25,7 @@
             <th>ID</th>
             <th>Time</th>
             <th>Version</th>
+            <th>Country</th>
             <th>Error</th>
             <th>Status</th>
         </tr>
@@ -33,6 +34,7 @@
             <td>{{ row.id }}</td>
             <td>{{ row.created_at }}</td>
             <td>{{ row.version }}</td>
+            <td>{{ row.country or '-' }}</td>
             <td><pre>{{ row.error }}</pre></td>
             <td>
                 {% set cls = 's-pending' if row.status == 'Pending' else ('s-inprogress' if row.status == 'In Progress' else 's-resolved') %}
@@ -49,7 +51,7 @@
             </td>
         </tr>
         {% else %}
-        <tr><td colspan="5">No records yet.</td></tr>
+        <tr><td colspan="6">No records yet.</td></tr>
         {% endfor %}
     </table>
 </body>
