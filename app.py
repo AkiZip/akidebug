@@ -178,18 +178,23 @@ def push_gotify_async(record_id, version, error):
 
 # ---------- Feature 1: anonymous telemetry upload ----------
 
-def fail(message):
-    """Render the result page with a 400 status on upload failure."""
-    return render_template("upload_result.html", success=False, message=message), 400
+def fail(message_key):
+    """Render the result page with a 400 status on upload failure.
+
+    message_key is a stable i18n key translated client-side in the
+    upload_result template (see its I18N dictionary).
+    """
+    return render_template("upload_result.html", success=False,
+                           message_key=message_key), 400
 
 
 @app.route("/upload")
 def upload():
     data = request.args.get("data", "")
     if not data:
-        return fail("Missing 'data' parameter.")
+        return fail("missing_data")
     if len(data) > MAX_DATA_LEN:
-        return fail("Payload too large.")
+        return fail("payload_too_large")
 
     # Accept URL-safe base64 and restore any stripped padding
     raw_b64 = data.replace("-", "+").replace("_", "/")
@@ -197,15 +202,15 @@ def upload():
     try:
         decoded = base64.b64decode(raw_b64, validate=True)
     except (binascii.Error, ValueError):
-        return fail("Invalid base64 data.")
+        return fail("invalid_base64")
 
     try:
         payload = json.loads(decoded.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
-        return fail("Invalid JSON payload.")
+        return fail("invalid_json")
 
     if not isinstance(payload, dict) or "version" not in payload:
-        return fail("JSON payload must contain a 'version' field.")
+        return fail("missing_version")
 
     version = str(payload["version"])
     error = payload.get("error", payload.get("message"))
@@ -230,8 +235,7 @@ def upload():
     conn.commit()
     push_gotify_async(record_id, version, error)
     return render_template(
-        "upload_result.html", success=True,
-        message="Telemetry submitted successfully. Thank you for your feedback!",
+        "upload_result.html", success=True, message_key="success_msg",
         record_id=record_id,
     )
 
