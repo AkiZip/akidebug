@@ -15,7 +15,6 @@
         .card.c-inprogress .num { color: #f57f17; }
         .card.c-resolved .num { color: #2e7d32; }
         .chart { margin-bottom: 32px; }
-        a { color: #1976d2; }
     </style>
 </head>
 <body>
@@ -33,9 +32,7 @@
     <div class="chart"><canvas id="statusChart"></canvas></div>
     <div class="chart"><canvas id="trendChart"></canvas></div>
 
-    <p><a href="{{ url_for('admin') }}">Admin Panel</a></p>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.6.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.6.1/chart.umd.min.js"></script>
     <script>
         const statuses = {{ statuses | tojson }};
         const statusCounts = {{ status_counts | tojson }};
