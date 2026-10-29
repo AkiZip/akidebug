@@ -9,7 +9,7 @@ import ssl
 import threading
 import urllib.parse
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pymysql
 from flask import (Flask, abort, g, redirect, render_template, request,
@@ -237,6 +237,34 @@ def upload():
     return render_template(
         "upload_result.html", success=True, message_key="success_msg",
         record_id=record_id,
+    )
+
+
+# ---------- Homepage (statistics) ----------
+
+@app.route("/")
+def index():
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute("SELECT COUNT(*) AS c FROM telemetry")
+        total = cur.fetchone()["c"]
+        cur.execute("SELECT status, COUNT(*) AS c FROM telemetry GROUP BY status")
+        status_counts = {r["status"]: r["c"] for r in cur.fetchall()}
+        cur.execute(
+            "SELECT DATE(created_at) AS d, COUNT(*) AS c FROM telemetry "
+            "WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 29 DAY) "
+            "GROUP BY DATE(created_at)"
+        )
+        daily_rows = {str(r["d"]): r["c"] for r in cur.fetchall()}
+    # Fill in missing days with 0 so the line chart is continuous
+    days, counts = [], []
+    for i in range(29, -1, -1):
+        day = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
+        days.append(day)
+        counts.append(daily_rows.get(day, 0))
+    return render_template(
+        "index.html", total=total, status_counts=status_counts,
+        statuses=STATUSES, days=days, counts=counts,
     )
 
 

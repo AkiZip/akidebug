@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>akidebug Statistics</title>
+    <style>
+        body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; color: #333; margin: 24px; max-width: 960px; }
+        .cards { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0 24px; }
+        .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px 20px; min-width: 120px; }
+        .card .num { font-size: 28px; font-weight: bold; }
+        .card .label { font-size: 13px; color: #777; }
+        .card.c-total .num { color: #1976d2; }
+        .card.c-pending .num { color: #c62828; }
+        .card.c-inprogress .num { color: #f57f17; }
+        .card.c-resolved .num { color: #2e7d32; }
+        .chart { margin-bottom: 32px; }
+        a { color: #1976d2; }
+    </style>
+</head>
+<body>
+    <h2>akidebug Statistics</h2>
+    <div class="cards">
+        <div class="card c-total"><div class="num">{{ total }}</div><div class="label">Total</div></div>
+        {% for s in statuses %}
+        <div class="card c-{{ s|lower|replace(' ', '') }}">
+            <div class="num">{{ status_counts.get(s, 0) }}</div>
+            <div class="label">{{ s }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="chart"><canvas id="statusChart"></canvas></div>
+    <div class="chart"><canvas id="trendChart"></canvas></div>
+
+    <p><a href="{{ url_for('admin') }}">Admin Panel</a></p>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.6.1/chart.min.js"></script>
+    <script>
+        const statuses = {{ statuses | tojson }};
+        const statusCounts = {{ status_counts | tojson }};
+        const statusData = statuses.map(s => statusCounts[s] || 0);
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: statuses,
+                datasets: [{
+                    data: statusData,
+                    backgroundColor: ['#ef5350', '#ffb74d', '#66bb6a'],
+                }],
+            },
+            options: { plugins: { title: { display: true, text: 'Status Distribution' } } },
+        });
+
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: {{ days | tojson }},
+                datasets: [{
+                    label: 'New records',
+                    data: {{ counts | tojson }},
+                    borderColor: '#1976d2',
+                    tension: 0.2,
+                }],
+            },
+            options: { plugins: { title: { display: true, text: 'Records in the Last 30 Days' } } },
+        });
+    </script>
+</body>
+</html>
