@@ -14,7 +14,7 @@
         .card.c-pending .num { color: #c62828; }
         .card.c-inprogress .num { color: #f57f17; }
         .card.c-resolved .num { color: #2e7d32; }
-        .chart { margin-bottom: 32px; }
+        .chart { position: relative; height: 300px; max-width: 600px; margin-bottom: 32px; }
     </style>
 </head>
 <body>
@@ -46,7 +46,7 @@
                     backgroundColor: ['#ef5350', '#ffb74d', '#66bb6a'],
                 }],
             },
-            options: { plugins: { title: { display: true, text: 'Status Distribution' } } },
+            options: { maintainAspectRatio: false, plugins: { title: { display: true, text: 'Status Distribution' } } },
         });
 
         new Chart(document.getElementById('trendChart'), {
@@ -60,7 +60,7 @@
                     tension: 0.2,
                 }],
             },
-            options: { plugins: { title: { display: true, text: 'Records in the Last 30 Days' } } },
+            options: { maintainAspectRatio: false, plugins: { title: { display: true, text: 'Records in the Last 30 Days' } } },
         });
     </script>
 </body>
