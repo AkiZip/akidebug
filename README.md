@@ -53,7 +53,6 @@ Notes:
 - URL-safe base64 (`-` / `_`) is accepted, and missing padding is restored automatically.
 - If there is no `error` field, `message` is used instead; otherwise the whole JSON payload is stored.
 - Payload size is limited to 64KB.
-- The `CF-IPCountry` header is stored with each record when the site is served through Cloudflare. On direct (non-Cloudflare) connections the header can be forged, so it must not be relied on for security decisions.
 
 ### Push notifications (Gotify)
 
@@ -73,5 +72,5 @@ curl "https://push.example.de/message" -H "X-Gotify-Key: <apptoken>" \
 
 Open `http://127.0.0.1:5000/admin` in a browser and log in with the admin password to:
 
-- View all telemetry records (ID, time, version, country, error content)
+- View all telemetry records (ID, time, version, error content)
 - Set the processing status of each record (Pending / In Progress / Resolved)
